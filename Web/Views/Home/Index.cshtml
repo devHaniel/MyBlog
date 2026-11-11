@@ -1,74 +1,257 @@
 @model Web.Models.HomeIndexViewModel
+@using Application.DTOs
+@using Web.Models
 @{
+    var posts = Model.Posts
+        .OrderByDescending(post => post.PublishedAt ?? post.CreatedAt)
+        .ToList();
+    var categories = Model.Categories;
+    var featuredPost = posts.FirstOrDefault();
+    var latestPosts = posts.Skip(1).ToList();
+    var latestInitiallyVisible = latestPosts.Take(6).ToList();
+    var remainingCategoryPosts = posts.Skip(Math.Min(posts.Count, 7)).ToList();
+    var usedSectionPostIds = new HashSet<int>();
+    var hasMorePosts = latestPosts.Count > 6;
     ViewData["Title"] = Model.Title;
 }
 
-<div class="container mt-4">
-    <h1 class="mb-4">@Model.Title</h1>
-
-    <div class="mb-4">
-        <h2>Categorías</h2>
-        @if (Model.Categories.Any())
+<div class="editorial-home">
+    <section class="home-hero" aria-labelledby="home-title">
+        @if (featuredPost is not null)
         {
-            <ul class="list-group">
-                @foreach (var category in Model.Categories)
-                {
-                    <li class="list-group-item">
-                        <a asp-controller="Home" asp-action="ByCategory" asp-route-slug="@category.Slug" class="d-flex w-100 fw-normal text-link">
-                            <strong>@category.Name</strong>
-                            <span class="text-muted ms-auto">(@category.Slug)</span>
-                        </a>
-                    </li>
-                }
-            </ul>
+            var featureCategories = categories.Where(category => featuredPost.CategoryIds.Contains(category.Id)).ToList();
+            var featureCard = new HomePostCardViewModel { Post = featuredPost, Categories = featureCategories };
+            <a class="home-feature" asp-route="post-detail" asp-route-slug="@featuredPost.Slug"
+               data-home-article data-post-id="@featuredPost.Id" data-category-ids="@string.Join(",", featuredPost.CategoryIds)">
+                <div class="home-feature__image">
+                    @if (!string.IsNullOrWhiteSpace(featuredPost.CoverImage))
+                    {
+                        <img src="@featuredPost.CoverImage" alt="" width="1200" height="675" fetchpriority="high" />
+                    }
+                    else
+                    {
+                        <span class="home-image-placeholder">Imagen del artículo</span>
+                    }
+                    @if (featureCategories.FirstOrDefault() is { } featureCategory)
+                    {
+                        <span class="home-feature__category">@featureCategory.Name</span>
+                    }
+                </div>
+                <div class="home-feature__copy">
+                    <p class="home-eyebrow">Artículo destacado</p>
+                    <div class="home-meta">
+                        <span>@(featuredPost.AuthorName)</span>
+                        <span aria-hidden="true">/</span>
+                        <time datetime="@((featuredPost.PublishedAt ?? featuredPost.CreatedAt).ToString("yyyy-MM-dd"))">
+                            @((featuredPost.PublishedAt ?? featuredPost.CreatedAt).ToString("dd MMM yyyy"))
+                        </time>
+                        <span aria-hidden="true">/</span>
+                        <span>@featureCard.ReadingMinutes min de lectura</span>
+                    </div>
+                    <h1 id="home-title">@featuredPost.Title</h1>
+                    @if (!string.IsNullOrWhiteSpace(featuredPost.Excerpt))
+                    {
+                        <p class="home-feature__excerpt">@featuredPost.Excerpt</p>
+                    }
+                    @if (featureCategories.Count > 1)
+                    {
+                        <div class="home-tags" aria-label="Categorías">
+                            @foreach (var category in featureCategories.Skip(1).Take(2))
+                            {
+                                <span>@category.Name</span>
+                            }
+                        </div>
+                    }
+                    <span class="home-text-link">Leer artículo <span aria-hidden="true">→</span></span>
+                </div>
+            </a>
         }
-    </div>
+        else
+        {
+            <div class="home-hero__empty">
+                <p class="home-eyebrow">C# · .NET · Desarrollo</p>
+                <h1 id="home-title">Ideas claras para construir con C# y .NET.</h1>
+                <p>Pronto encontrarás aquí nuevas guías, ejemplos y proyectos.</p>
+            </div>
+        }
 
-    <div class="row">
-        <div class="col-12">
-            <h2 id="publicaciones">Publicaciones</h2>
-            @if (Model.Posts.Any())
+    </section>
+
+    <section class="home-explore" aria-label="Explorar publicaciones">
+        <div class="home-category-chips" aria-label="Filtrar por categoría">
+            <button type="button" class="home-chip is-active" data-category-filter="all" aria-pressed="true">Todo</button>
+            @foreach (var category in categories)
             {
-                @foreach (var post in Model.Posts)
+                <button type="button" class="home-chip" data-category-filter="@category.Id" aria-pressed="false">@category.Name</button>
+            }
+        </div>
+        <div class="home-search">
+            <label for="home-search-input">Buscar artículos</label>
+            <div class="home-search__field">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8" /><path d="m16 16 5 5" /></svg>
+                <input id="home-search-input" type="search" placeholder="Buscar C#, .NET..." autocomplete="off" />
+            </div>
+        </div>
+        <p class="home-search__status" aria-live="polite"></p>
+    </section>
+
+    <section class="home-latest" id="ultimas-publicaciones" aria-labelledby="latest-title">
+        <div class="home-section-heading">
+            <div>
+                <p class="home-eyebrow">Lo más reciente</p>
+                <h2 id="latest-title">Últimas publicaciones</h2>
+            </div>
+            <p class="home-section-description">Ideas nuevas para seguir aprendiendo y creando.</p>
+        </div>
+        @if (latestInitiallyVisible.Any())
+        {
+            <div class="home-card-grid">
+                @foreach (var post in latestInitiallyVisible)
                 {
-                    <article class="card mb-3">
-                        <div class="row no-gutters">
-                            <div class="col-md-4">
-                                @if (!string.IsNullOrEmpty(post.CoverImage))
+                    var postCategories = categories.Where(category => post.CategoryIds.Contains(category.Id)).ToList();
+                    <partial name="_HomePostCard" model="new HomePostCardViewModel { Post = post, Categories = postCategories }" />
+                }
+            </div>
+            @if (hasMorePosts)
+            {
+                <div class="home-load-more-wrap">
+                    <button class="home-button home-button--outline" type="button" data-load-more> Cargar más </button>
+                </div>
+                <div class="home-card-grid home-card-grid--more" data-more-posts hidden>
+                    @foreach (var post in latestPosts.Skip(6))
+                    {
+                        var postCategories = categories.Where(category => post.CategoryIds.Contains(category.Id)).ToList();
+                        <partial name="_HomePostCard" model="new HomePostCardViewModel { Post = post, Categories = postCategories }" />
+                    }
+                </div>
+            }
+        }
+        else
+        {
+            <p class="home-empty-note">Todavía no hay más publicaciones. Vuelve pronto para descubrir nuevas guías.</p>
+        }
+    </section>
+
+    @{
+        var categoryNumber = 0;
+    }
+    @foreach (var category in categories)
+    {
+        var categoryPosts = remainingCategoryPosts
+            .Where(post => post.CategoryIds.Contains(category.Id) && !usedSectionPostIds.Contains(post.Id))
+            .ToList();
+        if (categoryPosts.Count == 0)
+        {
+            continue;
+        }
+
+        var format = categoryNumber % 4;
+        var sectionTitle = $"{categoryNumber + 1:00} / {category.Name}";
+        var categoryDescription = string.IsNullOrWhiteSpace(category.Description)
+            ? $"Artículos y recursos sobre {category.Name}."
+            : category.Description;
+        var displayLimit = format switch { 0 => 4, 1 => 3, 2 => 5, _ => 6 };
+        var sectionPosts = categoryPosts.Take(displayLimit).ToList();
+        foreach (var post in sectionPosts)
+        {
+            usedSectionPostIds.Add(post.Id);
+        }
+        categoryNumber++;
+
+        <section class="home-category home-category--format-@format" aria-labelledby="category-title-@category.Id" data-category-section>
+            <div class="home-section-heading">
+                <div>
+                    <p class="home-eyebrow">@sectionTitle</p>
+                    <h2 id="category-title-@category.Id">@category.Name</h2>
+                    <p class="home-section-description">@categoryDescription</p>
+                </div>
+                <a class="home-text-link" asp-controller="Home" asp-action="ByCategory" asp-route-slug="@category.Slug">
+                    Ver todas <span aria-hidden="true">→</span>
+                </a>
+            </div>
+            @if (format == 0)
+            {
+                var leadPost = sectionPosts[0];
+                <div class="home-category-feature-layout">
+                    <partial name="_HomePostCard" model="new HomePostCardViewModel { Post = leadPost, Categories = new List<CategoryDto> { category } }" view-data='new ViewDataDictionary(ViewData) { ["CardClass"] = "home-card--category-feature" }' />
+                    <div class="home-category-list">
+                        @foreach (var post in sectionPosts.Skip(1))
+                        {
+                            <a class="home-category-list__item" asp-route="post-detail" asp-route-slug="@post.Slug"
+                               data-home-article data-post-id="@post.Id" data-category-ids="@string.Join(",", post.CategoryIds)">
+                                <span class="home-category-list__number">@((sectionPosts.IndexOf(post) + 1).ToString("00"))</span>
+                                <span class="home-category-list__title">@post.Title</span>
+                                <span class="home-category-list__date">@((post.PublishedAt ?? post.CreatedAt).ToString("dd MMM yyyy"))</span>
+                                <span aria-hidden="true">↗</span>
+                            </a>
+                        }
+                    </div>
+                </div>
+            }
+            else if (format == 1)
+            {
+                <div class="home-card-grid home-card-grid--category">
+                    @foreach (var post in sectionPosts)
+                    {
+                        <partial name="_HomePostCard" model="new HomePostCardViewModel { Post = post, Categories = new List<CategoryDto> { category } }" />
+                    }
+                </div>
+            }
+            else if (format == 2)
+            {
+                <div class="home-compact-list">
+                    @foreach (var post in sectionPosts)
+                    {
+                        <a class="home-compact-card" asp-route="post-detail" asp-route-slug="@post.Slug"
+                           data-home-article data-post-id="@post.Id" data-category-ids="@string.Join(",", post.CategoryIds)">
+                            <span class="home-compact-card__image">
+                                @if (!string.IsNullOrWhiteSpace(post.CoverImage))
                                 {
-                                    <img src="@post.CoverImage" class="card-img-top" alt="@post.Title" style="max-height: 200px; object-fit: cover;" />
+                                    <img src="@post.CoverImage" alt="" width="160" height="100" loading="lazy" />
                                 }
                                 else
                                 {
-                                    <div class="card-img-top bg-secondary text-white" style="height: 200px; display: flex; align-items: center; justify-content: center;">
-                                        <span>Sin imagen</span>
-                                    </div>
+                                    <span class="home-image-placeholder">Imagen</span>
                                 }
-                            </div>
-                            <div class="col-md-8">
-                                <div class="card-body">
-                                    <h3 class="card-title">@post.Title</h3>
-                                    <p class="card-text">@post.Excerpt</p>
-                                    <p class="card-text">
-                                        <small class="text-muted">
-                                            @post.AuthorName · @post.CreatedAt.ToString("dd/MM/yyyy")
-                                            @if (post.CategoryIds.Any())
-                                            {
-                                                <text> · Categorías: @string.Join(", ", Model.Categories.Where(category => post.CategoryIds.Contains(category.Id)).Select(category => category.Name))</text>
-                                            }
-                                            </small>
-                                    </p>
-                                    <a asp-route="post-detail" asp-route-slug="@post.Slug" class="btn btn-link stretched-link">Leer más</a>
-                                </div>
-                            </div>
-                        </div>
-                    </article>
-                }
+                            </span>
+                            <span class="home-compact-card__copy">
+                                <span class="home-compact-card__title">@post.Title</span>
+                                <span class="home-compact-card__meta">@post.AuthorName · @((post.PublishedAt ?? post.CreatedAt).ToString("dd MMM yyyy"))</span>
+                            </span>
+                            <span class="home-compact-card__arrow" aria-hidden="true">↗</span>
+                        </a>
+                    }
+                </div>
             }
             else
             {
-                <p>No hay publicaciones disponibles.</p>
+                <div class="home-carousel" aria-label="Publicaciones de @category.Name">
+                    @foreach (var post in sectionPosts)
+                    {
+                        <partial name="_HomePostCard" model="new HomePostCardViewModel { Post = post, Categories = new List<CategoryDto> { category } }" />
+                    }
+                </div>
             }
+        </section>
+    }
+
+    <section class="home-subscribe" aria-labelledby="subscribe-title">
+        <div class="home-subscribe__copy">
+            <p class="home-eyebrow">Aprender en comunidad</p>
+            <h2 id="subscribe-title">Recibe nuevas guías de C# y .NET</h2>
+            <p>Crea una cuenta para participar en los comentarios. El boletín por correo todavía no está disponible.</p>
         </div>
-    </div>
+        <form class="home-subscribe__form" asp-controller="Account" asp-action="Register" method="get">
+            <label for="home-email">Correo electrónico</label>
+            <div class="home-subscribe__controls">
+                <input id="home-email" name="email" type="email" autocomplete="email" placeholder="tu@correo.com" required />
+                <button class="home-button" type="submit">Crear cuenta</button>
+            </div>
+        </form>
+    </section>
+
 </div>
+
+@section Scripts {
+    <script src="~/js/home.js" asp-append-version="true"></script>
+}

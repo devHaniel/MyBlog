@@ -3,14 +3,17 @@ namespace Web.Models;
 public sealed class SiteContentOptions
 {
     public string SubscriptionTitle { get; set; } =
-        "Si hay algo que todavía no te han explicado está aquí";
+        "Recibe nuevas guías de C# y .NET";
 
     public string SubscriptionDescription { get; set; } =
-        "Explora tutoriales, ejemplos y recursos para aprender C# y .NET, paso a paso.";
+        "Crea una cuenta para participar en los comentarios. El boletín por correo todavía no está disponible.";
 
-    public string SubscriptionButtonText { get; set; } = "Suscríbete";
+    public string SubscriptionButtonText { get; set; } = "Crear cuenta";
     public string SubscriptionButtonUrl { get; set; } = "/Account/Register";
     public string SiteName { get; set; } = "Mi Blog";
+    public string HomeDescription { get; set; } =
+        "Ideas, guías y ejemplos prácticos para construir mejores aplicaciones con C# y .NET.";
+    public string ContactEmail { get; set; } = "PENDIENTE: correo de contacto";
     public string FooterSlogan { get; set; } =
         "Construye tu negocio online y empieza a generar beneficios de verdad.";
     public string FooterDomain { get; set; } = "tudominio.com";

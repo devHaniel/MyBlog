@@ -1,0 +1,51 @@
+@model Web.Models.HomePostCardViewModel
+@using System.Text.RegularExpressions
+@{
+    var post = Model.Post;
+    var excerptSource = string.IsNullOrWhiteSpace(post.Excerpt) ? post.Content : post.Excerpt;
+    var excerpt = Regex.Replace(excerptSource ?? string.Empty, "<[^>]*>", " ");
+    excerpt = Regex.Replace(excerpt, @"\s+", " ").Trim();
+    if (excerpt.Length > 150)
+    {
+        excerpt = excerpt[..147].TrimEnd() + "...";
+    }
+}
+
+<a class="home-card @ViewData["CardClass"]" asp-route="post-detail" asp-route-slug="@post.Slug"
+   data-home-article data-post-id="@post.Id" data-category-ids="@string.Join(",", post.CategoryIds)">
+    <span class="home-card__image">
+        @if (!string.IsNullOrWhiteSpace(post.CoverImage))
+        {
+            <img src="@post.CoverImage" alt="" width="800" height="450" loading="lazy" />
+        }
+        else
+        {
+            <span class="home-image-placeholder">Imagen del artículo</span>
+        }
+    </span>
+    <span class="home-card__body">
+        <span class="home-meta">
+            <span>@(Model.Categories.FirstOrDefault()?.Name ?? "C# y .NET")</span>
+            <span aria-hidden="true">/</span>
+            <span>@post.AuthorName</span>
+            <span aria-hidden="true">/</span>
+            <time datetime="@((post.PublishedAt ?? post.CreatedAt).ToString("yyyy-MM-dd"))">@((post.PublishedAt ?? post.CreatedAt).ToString("dd MMM yyyy"))</time>
+            <span aria-hidden="true">/</span>
+            <span>@Model.ReadingMinutes min</span>
+        </span>
+        <span class="home-card__title">@post.Title</span>
+        @if (!string.IsNullOrWhiteSpace(excerpt))
+        {
+            <span class="home-card__excerpt">@excerpt</span>
+        }
+        @if (Model.Categories.Count > 1)
+        {
+            <span class="home-tags">
+                @foreach (var category in Model.Categories.Skip(1).Take(2))
+                {
+                    <span>@category.Name</span>
+                }
+            </span>
+        }
+    </span>
+</a>

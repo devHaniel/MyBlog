@@ -45,9 +45,9 @@ public class AccountController : Controller
 
     [AllowAnonymous]
     [HttpGet]
-    public IActionResult Register()
+    public IActionResult Register(string? email = null)
     {
-        return View(new RegisterViewModel());
+        return View(new RegisterViewModel { Email = email ?? string.Empty });
     }
 
     [AllowAnonymous]

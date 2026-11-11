@@ -3,13 +3,14 @@
 @inject IOptions<SiteContentOptions> SiteContentOptionsAccessor
 @{
     var siteContent = SiteContentOptionsAccessor.Value;
+    var isEditorialHome = ViewData["EditorialHome"] is true;
 }
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Web</title>
+    <title>@ViewData["Title"] - @siteContent.SiteName</title>
     @if (ViewData["CanonicalUrl"] is string canonicalUrl)
     {
         <link rel="canonical" href="@canonicalUrl" />
@@ -76,7 +77,7 @@
             </div>
         </nav>
     </header>
-    <main role="main" class="pb-3 @(ViewData["FullWidth"] is true ? "site-main--full-width" : "container")">
+    <main role="main" class="pb-3 @(isEditorialHome ? "editorial-home-main" : ViewData["FullWidth"] is true ? "site-main--full-width" : "container")">
         @RenderBody()
     </main>
 

@@ -9,6 +9,29 @@ public class HomeIndexViewModel
     public List<CategoryDto> Categories { get; set; } = new();
 }
 
+public class HomePostCardViewModel
+{
+    public PostDto Post { get; set; } = null!;
+    public List<CategoryDto> Categories { get; set; } = new();
+
+    public int ReadingMinutes
+    {
+        get
+        {
+            var content = string.Join(
+                " ",
+                new[] { Post.Content }
+                    .Concat(Post.Articles.Select(article => article.Content))
+                    .Where(value => !string.IsNullOrWhiteSpace(value)));
+            var wordCount = content.Split(
+                (char[]?)null,
+                StringSplitOptions.RemoveEmptyEntries).Length;
+
+            return Math.Max(1, (int)Math.Ceiling(wordCount / 200d));
+        }
+    }
+}
+
 public class PostDetailViewModel
 {
     public PostDto Post { get; set; } = new(

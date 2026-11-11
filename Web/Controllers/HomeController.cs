@@ -1,9 +1,13 @@
 using System.Diagnostics;
+using System.Globalization;
 using System.Security.Claims;
+using System.Text;
+using System.Xml.Linq;
 using Application.DTOs;
 using Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using Markdig;
 using Web.Models;
 
@@ -16,26 +20,30 @@ public class HomeController : Controller
     private readonly ICommentService _commentService;
     private readonly IArticleContentSanitizer _articleContentSanitizer;
     private readonly IUserService _userService;
+    private readonly SiteContentOptions _siteContent;
 
     public HomeController(
         IPostService postService,
         ICategoryService categoryService,
         ICommentService commentService,
         IArticleContentSanitizer articleContentSanitizer,
-        IUserService userService)
+        IUserService userService,
+        IOptions<SiteContentOptions> siteContent)
     {
         _postService = postService;
         _categoryService = categoryService;
         _commentService = commentService;
         _articleContentSanitizer = articleContentSanitizer;
         _userService = userService;
+        _siteContent = siteContent.Value;
     }
 
     public async Task<IActionResult> Index()
     {
+        ViewData["EditorialHome"] = true;
         var model = new HomeIndexViewModel
         {
-            Title = "Blog",
+            Title = _siteContent.SiteName,
             Posts = (await _postService.GetAllAsync())
                 .Where(post => post.IsPublished)
                 .ToList(),
@@ -113,6 +121,7 @@ public class HomeController : Controller
             Categories = categories
         };
 
+        ViewData["EditorialHome"] = true;
         return View("Index", model);
     }
 
@@ -131,7 +140,54 @@ public class HomeController : Controller
             Categories = (await _categoryService.GetAllAsync()).ToList()
         };
 
+        ViewData["EditorialHome"] = true;
         return View("Index", model);
+    }
+
+    [HttpGet("/sobre-mi", Name = "about-site")]
+    public IActionResult About()
+    {
+        return View();
+    }
+
+    [HttpGet("/feed.xml", Name = "rss-feed")]
+    public async Task<IActionResult> Feed()
+    {
+        var posts = (await _postService.GetAllAsync())
+            .Where(post => post.IsPublished)
+            .OrderByDescending(post => post.PublishedAt ?? post.CreatedAt)
+            .Take(20)
+            .ToList();
+        var channel = new XElement(
+            "channel",
+            new XElement("title", _siteContent.SiteName),
+            new XElement("link", Url.Action(nameof(Index), "Home", values: null, protocol: Request.Scheme)),
+            new XElement("description", _siteContent.HomeDescription),
+            new XElement("language", "es"));
+
+        foreach (var post in posts)
+        {
+            var postUrl = Url.RouteUrl(
+                "post-detail",
+                new { slug = post.Slug },
+                Request.Scheme)
+                ?? throw new InvalidOperationException("The public post route could not be generated.");
+            var publishedAt = post.PublishedAt ?? post.CreatedAt;
+
+            channel.Add(new XElement(
+                "item",
+                new XElement("title", post.Title),
+                new XElement("link", postUrl),
+                new XElement("guid", new XAttribute("isPermaLink", "true"), postUrl),
+                new XElement("description", post.Excerpt ?? post.Content),
+                new XElement("pubDate", publishedAt.ToUniversalTime().ToString("R", CultureInfo.InvariantCulture))));
+        }
+
+        var document = new XDocument(
+            new XDeclaration("1.0", "utf-8", null),
+            new XElement("rss", new XAttribute("version", "2.0"), channel));
+
+        return Content(document.ToString(SaveOptions.DisableFormatting), "application/rss+xml; charset=utf-8");
     }
 
     [HttpPost]

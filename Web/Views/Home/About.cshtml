@@ -1,0 +1,15 @@
+@using Microsoft.Extensions.Options
+@using Web.Models
+@inject IOptions<SiteContentOptions> SiteContentOptionsAccessor
+@{
+    ViewData["Title"] = "Sobre el sitio";
+    var siteContent = SiteContentOptionsAccessor.Value;
+}
+
+<article class="container py-5">
+    <p class="text-uppercase text-muted">Sobre el sitio</p>
+    <h1>@siteContent.SiteName</h1>
+    <p class="lead">@siteContent.HomeDescription</p>
+    <p>Este espacio comparte recursos y experiencias para aprender programación con C# y .NET. Las publicaciones se irán ampliando conforme se incorporen nuevos artículos.</p>
+    <a class="btn btn-primary" asp-controller="Home" asp-action="Index">Volver a las publicaciones</a>
+</article>

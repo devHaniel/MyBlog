@@ -1,0 +1,61 @@
+@model Web.ViewModels.PostDetailsViewModel
+@{
+    ViewData["Title"] = Model.Post.Title;
+}
+
+<h2>@Model.Post.Title</h2>
+
+<div class="row mt-3">
+    <div class="col-md-4">
+        <h4>Post Details</h4>
+        <hr />
+        <dl class="row">
+            <dt class="col-sm-2">Id</dt>
+            <dd class="col-sm-10">@Model.Post.Id</dd>
+            <dt class="col-sm-2">Title</dt>
+            <dd class="col-sm-10">@Model.Post.Title</dd>
+            <dt class="col-sm-2">Slug</dt>
+            <dd class="col-sm-10">@Model.Post.Slug</dd>
+            <dt class="col-sm-2">Author</dt>
+            <dd class="col-sm-10">@Model.Post.AuthorName</dd>
+            <dt class="col-sm-2">Published</dt>
+            <dd class="col-sm-10">@(Model.Post.IsPublished ? "Yes" : "No")</dd>
+            <dt class="col-sm-2">Created At</dt>
+            <dd class="col-sm-10">@Model.Post.CreatedAt.ToShortDateString()</dd>
+            <dt class="col-sm-2">Updated At</dt>
+            <dd class="col-sm-10">@Model.Post.UpdatedAt.HasValue ? Model.Post.UpdatedAt.Value.ToShortDateString() : "N/A"</dd>
+            <dt class="col-sm-2">Comment Count</dt>
+            <dd class="col-sm-10">@Model.Post.CommentCount</dd>
+        </dl>
+    </div>
+    <div class="col-md-8">
+        <h5>Content</h5>
+        <hr />
+        <div>@Model.Post.Content</div>
+        @if (Model.Post.Excerpt != null) {
+            <div class="mt-3">
+                <strong>Excerpt:</strong> @Model.Post.Excerpt
+            </div>
+        }
+        @if (Model.Post.CoverImage != null) {
+            <div class="mt-3">
+                <strong>Cover Image:</strong> <img src="@Model.Post.CoverImage" alt="Cover" style="max-width: 100%; max-height: 300px;" />
+            </div>
+        }
+        <h5 class="mt-4">Articles</h5>
+        @foreach (var article in Model.Post.Articles.OrderBy(article => article.Order))
+        {
+            <section class="border rounded p-3 mb-2">
+                <small class="text-muted">@article.ContentType · Order @article.Order</small>
+                <p class="mb-0">@article.Content</p>
+            </section>
+        }
+    </div>
+</div>
+
+<div class="mt-3">
+    <a asp-action="Edit" asp-route-id="@Model.Post.Id" class="btn btn-primary">Editar</a>
+    <a asp-action="Delete" asp-route-id="@Model.Post.Id" class="btn btn-outline-danger">Eliminar</a>
+    <a asp-controller="Comments" asp-action="Index" asp-route-postId="@Model.Post.Id" class="btn btn-outline-info">Administrar comentarios</a>
+    <a asp-action="Index" asp-controller="Posts" class="btn btn-link">Back to List</a>
+</div>

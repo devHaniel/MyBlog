@@ -1,0 +1,23 @@
+@model Web.ViewModels.UserIndexViewModel
+@{
+    ViewData["Title"] = "User details";
+}
+
+<h1>User details</h1>
+<dl class="row">
+    <dt class="col-sm-3">Full name</dt>
+    <dd class="col-sm-9">@Model.User.FullName</dd>
+    <dt class="col-sm-3">Username</dt>
+    <dd class="col-sm-9">@Model.User.UserName</dd>
+    <dt class="col-sm-3">Email</dt>
+    <dd class="col-sm-9">@(Model.User.Email ?? "Not provided")</dd>
+    <dt class="col-sm-3">Member since</dt>
+    <dd class="col-sm-9">@Model.User.CreatedAt.ToShortDateString()</dd>
+    <dt class="col-sm-3">Posts</dt>
+    <dd class="col-sm-9">@Model.User.PostCount</dd>
+    <dt class="col-sm-3">Comments</dt>
+    <dd class="col-sm-9">@Model.User.CommentCount</dd>
+</dl>
+<a asp-action="Edit" asp-route-id="@Model.User.Id" class="btn btn-primary">Edit</a>
+<a asp-action="Delete" asp-route-id="@Model.User.Id" class="btn btn-outline-danger">Delete</a>
+<a asp-action="Index" class="btn btn-secondary">Back</a>

@@ -1,0 +1,74 @@
+@model Web.Models.HomeIndexViewModel
+@{
+    ViewData["Title"] = Model.Title;
+}
+
+<div class="container mt-4">
+    <h1 class="mb-4">@Model.Title</h1>
+
+    <div class="mb-4">
+        <h2>Categorías</h2>
+        @if (Model.Categories.Any())
+        {
+            <ul class="list-group">
+                @foreach (var category in Model.Categories)
+                {
+                    <li class="list-group-item">
+                        <a asp-controller="Home" asp-action="ByCategory" asp-route-slug="@category.Slug" class="d-flex w-100 fw-normal text-link">
+                            <strong>@category.Name</strong>
+                            <span class="text-muted ms-auto">(@category.Slug)</span>
+                        </a>
+                    </li>
+                }
+            </ul>
+        }
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <h2>Publicaciones</h2>
+            @if (Model.Posts.Any())
+            {
+                @foreach (var post in Model.Posts)
+                {
+                    <article class="card mb-3">
+                        <div class="row no-gutters">
+                            <div class="col-md-4">
+                                @if (!string.IsNullOrEmpty(post.CoverImage))
+                                {
+                                    <img src="@post.CoverImage" class="card-img-top" alt="@post.Title" style="max-height: 200px; object-fit: cover;" />
+                                }
+                                else
+                                {
+                                    <div class="card-img-top bg-secondary text-white" style="height: 200px; display: flex; align-items: center; justify-content: center;">
+                                        <span>Sin imagen</span>
+                                    </div>
+                                }
+                            </div>
+                            <div class="col-md-8">
+                                <div class="card-body">
+                                    <h3 class="card-title">@post.Title</h3>
+                                    <p class="card-text">@post.Excerpt</p>
+                                    <p class="card-text">
+                                        <small class="text-muted">
+                                            @post.AuthorName · @post.CreatedAt.ToString("dd/MM/yyyy")
+                                            @if (post.CategoryIds.Any())
+                                            {
+                                                <text> · Categorías: @string.Join(", ", Model.Categories.Where(category => post.CategoryIds.Contains(category.Id)).Select(category => category.Name))</text>
+                                            }
+                                            </small>
+                                    </p>
+                                    <a asp-controller="Home" asp-action="Detail" asp-route-slug="@post.Slug" class="btn btn-link stretched-link">Leer más</a>
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+                }
+            }
+            else
+            {
+                <p>No hay publicaciones disponibles.</p>
+            }
+        </div>
+    </div>
+</div>

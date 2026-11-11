@@ -1,0 +1,135 @@
+@model Web.ViewModels.EditPostViewModel
+@{
+    ViewData["Title"] = "Edit post";
+    var articles = Model.Dto.Articles ?? new List<Application.DTOs.ArticleDto>();
+    if (articles.Count == 0)
+    {
+        articles.Add(new Application.DTOs.ArticleDto(0, string.Empty, "Paragraph", 0, Model.Id));
+    }
+}
+
+<h1>Edit post</h1>
+<form asp-action="Edit" method="post">
+    @Html.AntiForgeryToken()
+    <input asp-for="Id" type="hidden" />
+    <div asp-validation-summary="All" class="text-danger"></div>
+    <div class="mb-3">
+        <label asp-for="Dto.Title" class="form-label">Title</label>
+        <input asp-for="Dto.Title" class="form-control" required />
+    </div>
+    <div class="mb-3">
+        <label asp-for="Dto.Slug" class="form-label">Slug</label>
+        <input asp-for="Dto.Slug" class="form-control" required />
+    </div>
+    <div class="mb-3">
+        <label asp-for="Dto.Content" class="form-label">Summary content</label>
+        <textarea asp-for="Dto.Content" class="form-control" rows="4" required></textarea>
+    </div>
+    <div class="mb-3">
+        <label asp-for="Dto.Excerpt" class="form-label">Excerpt</label>
+        <textarea asp-for="Dto.Excerpt" class="form-control" rows="2"></textarea>
+    </div>
+    <div class="mb-3">
+        <label asp-for="Dto.CoverImage" class="form-label">Cover image URL</label>
+        <input asp-for="Dto.CoverImage" class="form-control" type="url" />
+    </div>
+    <fieldset class="mb-3">
+        <legend class="col-form-label">Articles</legend>
+        <div id="article-list">
+            @for (var index = 0; index < articles.Count; index++)
+            {
+                var article = articles[index];
+                <div class="article-item border rounded p-3 mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <label class="form-label article-label" for="article-content-@index">Article @(index + 1)</label>
+                        <button type="button" class="btn btn-sm btn-outline-danger remove-article">Remove</button>
+                    </div>
+                    <input type="hidden" class="article-id" name="Dto.Articles[@index].Id" value="@article.Id" />
+                    <input type="hidden" class="article-post-id" name="Dto.Articles[@index].PostId" value="@article.PostId" />
+                    <label class="form-label" for="article-type-@index">Content type</label>
+                    <select id="article-type-@index" name="Dto.Articles[@index].ContentType" class="form-select mb-2">
+                        <option value="Paragraph" selected="@(article.ContentType == "Paragraph")">Paragraph</option>
+                        <option value="Heading" selected="@(article.ContentType == "Heading")">Heading</option>
+                        <option value="Quote" selected="@(article.ContentType == "Quote")">Quote</option>
+                        <option value="Code" selected="@(article.ContentType == "Code")">Code</option>
+                        <option value="Image" selected="@(article.ContentType == "Image")">Image</option>
+                    </select>
+                    <textarea id="article-content-@index" name="Dto.Articles[@index].Content" class="form-control" rows="8" required>@article.Content</textarea>
+                    <div class="form-text">
+                        Admite HTML básico y estilos inline limitados (color, fondo, alineación y formato de texto).
+                        Ejemplo: &lt;p style="color: #555; text-align: center;"&gt;Texto&lt;/p&gt;
+                        Se eliminan etiquetas, atributos y estilos no permitidos.
+                    </div>
+                    <input type="hidden" class="article-order" name="Dto.Articles[@index].Order" value="@article.Order" />
+                </div>
+            }
+        </div>
+        <button type="button" id="add-article" class="btn btn-outline-primary">Add article</button>
+    </fieldset>
+    <fieldset class="mb-3">
+        <legend class="col-form-label">Categories</legend>
+        @foreach (var category in Model.AvailableCategories)
+        {
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="Dto.CategoryIds" value="@category.Id" id="category-@category.Id" checked="@Model.Dto.CategoryIds?.Contains(category.Id)" />
+                <label class="form-check-label" for="category-@category.Id">@category.Name</label>
+            </div>
+        }
+    </fieldset>
+    <div class="form-check mb-3">
+        <input asp-for="Dto.IsPublished" class="form-check-input" />
+        <label asp-for="Dto.IsPublished" class="form-check-label">Published</label>
+    </div>
+    <button type="submit" class="btn btn-primary">Save changes</button>
+    <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-secondary">Cancel</a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (() => {
+            const list = document.getElementById("article-list");
+            const addButton = document.getElementById("add-article");
+            updateArticleIndexes();
+
+            function updateArticleIndexes() {
+                const items = list.querySelectorAll(".article-item");
+                items.forEach((item, index) => {
+                    const content = item.querySelector("textarea");
+                    const type = item.querySelector("select");
+                    const order = item.querySelector(".article-order");
+
+                    item.querySelector(".article-label").textContent = `Article ${index + 1}`;
+                    item.querySelector(".remove-article").disabled = items.length === 1;
+                    type.name = `Dto.Articles[${index}].ContentType`;
+                    type.id = `article-type-${index}`;
+                    content.name = `Dto.Articles[${index}].Content`;
+                    content.id = `article-content-${index}`;
+                    item.querySelector(".article-label").htmlFor = content.id;
+                    content.rows = 8;
+                    item.querySelector(".article-id").name = `Dto.Articles[${index}].Id`;
+                    item.querySelector(".article-post-id").name = `Dto.Articles[${index}].PostId`;
+                    order.name = `Dto.Articles[${index}].Order`;
+                    order.value = index;
+                });
+            }
+
+            addButton.addEventListener("click", () => {
+                const item = list.querySelector(".article-item").cloneNode(true);
+                item.querySelector(".article-id").value = "0";
+                item.querySelector(".article-post-id").value = "0";
+                item.querySelector("textarea").value = "";
+                item.querySelector("select").value = "Paragraph";
+                list.appendChild(item);
+                updateArticleIndexes();
+            });
+
+            list.addEventListener("click", event => {
+                if (event.target instanceof Element && event.target.closest(".remove-article")) {
+                    event.target.closest(".article-item").remove();
+                    updateArticleIndexes();
+                }
+            });
+        })();
+    </script>
+}

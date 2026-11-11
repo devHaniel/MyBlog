@@ -1,0 +1,12 @@
+@model Web.ViewModels.CategoryDetailsViewModel
+@{
+    ViewData["Title"] = "Delete category";
+}
+
+<h1>Delete category</h1>
+<p>Are you sure you want to delete <strong>@Model.Category.Name</strong>?</p>
+<form asp-action="DeleteConfirmed" asp-route-id="@Model.Category.Id" method="post">
+    @Html.AntiForgeryToken()
+    <button type="submit" class="btn btn-danger">Delete permanently</button>
+    <a asp-action="Details" asp-route-id="@Model.Category.Id" class="btn btn-secondary">Cancel</a>
+</form>

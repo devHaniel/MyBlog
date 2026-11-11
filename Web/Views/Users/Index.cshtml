@@ -1,0 +1,41 @@
+@model IEnumerable<Application.DTOs.UserDto>
+@{
+    ViewData["Title"] = "Users";
+}
+
+<h1>User management</h1>
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger" role="alert">@error</div>
+}
+<p><a asp-action="Create" class="btn btn-primary">Create user</a></p>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Full name</th>
+            <th>Username</th>
+            <th>Email</th>
+            <th>Posts</th>
+            <th>Comments</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var user in Model)
+        {
+            <tr>
+                <td>@user.FullName</td>
+                <td>@user.UserName</td>
+                <td>@(user.Email ?? "—")</td>
+                <td>@user.PostCount</td>
+                <td>@user.CommentCount</td>
+                <td class="text-nowrap">
+                    <a asp-action="Details" asp-route-id="@user.Id" class="btn btn-sm btn-outline-primary">Details</a>
+                    <a asp-action="Edit" asp-route-id="@user.Id" class="btn btn-sm btn-outline-secondary">Edit</a>
+                    <a asp-action="Delete" asp-route-id="@user.Id" class="btn btn-sm btn-outline-danger">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

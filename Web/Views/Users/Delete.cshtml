@@ -1,0 +1,13 @@
+@model Web.ViewModels.UserIndexViewModel
+@{
+    ViewData["Title"] = "Delete user";
+}
+
+<h1>Delete user</h1>
+<p>Are you sure you want to delete <strong>@Model.User.UserName</strong>?</p>
+<form asp-action="Delete" asp-route-id="@Model.User.Id" method="post">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="confirmed" value="true" />
+    <button type="submit" class="btn btn-danger">Delete permanently</button>
+    <a asp-action="Details" asp-route-id="@Model.User.Id" class="btn btn-secondary">Cancel</a>
+</form>

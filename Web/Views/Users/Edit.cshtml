@@ -1,0 +1,29 @@
+@model Web.ViewModels.UserEditViewModel
+@{
+    ViewData["Title"] = "Edit user";
+}
+
+<h1>Edit user</h1>
+<form asp-action="Edit" method="post">
+    @Html.AntiForgeryToken()
+    <input asp-for="Id" type="hidden" />
+    <div asp-validation-summary="All" class="text-danger"></div>
+    <div class="mb-3">
+        <label asp-for="Dto.FullName" class="form-label">Full name</label>
+        <input asp-for="Dto.FullName" class="form-control" required />
+    </div>
+    <div class="mb-3">
+        <label asp-for="Dto.UserName" class="form-label">Username</label>
+        <input asp-for="Dto.UserName" class="form-control" required />
+    </div>
+    <div class="mb-3">
+        <label asp-for="Dto.Email" class="form-label">Email</label>
+        <input asp-for="Dto.Email" class="form-control" type="email" />
+    </div>
+    <div class="mb-3">
+        <label asp-for="Dto.PhoneNumber" class="form-label">Phone number</label>
+        <input asp-for="Dto.PhoneNumber" class="form-control" />
+    </div>
+    <button type="submit" class="btn btn-primary">Save changes</button>
+    <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-secondary">Cancel</a>
+</form>

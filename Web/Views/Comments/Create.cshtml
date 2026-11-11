@@ -1,0 +1,21 @@
+@model Web.ViewModels.CreateCommentViewModel
+@{
+    ViewData["Title"] = "Create comment";
+}
+
+<h1>Create comment</h1>
+<form asp-action="Create" method="post">
+    @Html.AntiForgeryToken()
+    <input asp-for="PostId" type="hidden" />
+    <div asp-validation-summary="All" class="text-danger"></div>
+    <div class="mb-3">
+        <label asp-for="Dto.Content" class="form-label">Content</label>
+        <textarea asp-for="Dto.Content" class="form-control" rows="5" required></textarea>
+    </div>
+    <div class="form-check mb-3">
+        <input asp-for="Dto.IsApproved" class="form-check-input" />
+        <label asp-for="Dto.IsApproved" class="form-check-label">Approved</label>
+    </div>
+    <button type="submit" class="btn btn-primary">Create</button>
+    <a asp-action="Index" asp-route-postId="@Model.PostId" class="btn btn-secondary">Cancel</a>
+</form>

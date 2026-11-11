@@ -1,0 +1,28 @@
+@model Web.ViewModels.UserCreateViewModel
+@{
+    ViewData["Title"] = "Create user";
+}
+
+<h1>Create user</h1>
+<form asp-action="Create" method="post">
+    @Html.AntiForgeryToken()
+    <div asp-validation-summary="All" class="text-danger"></div>
+    <div class="mb-3">
+        <label asp-for="Dto.FullName" class="form-label">Full name</label>
+        <input asp-for="Dto.FullName" class="form-control" required />
+    </div>
+    <div class="mb-3">
+        <label asp-for="Dto.UserName" class="form-label">Username</label>
+        <input asp-for="Dto.UserName" class="form-control" required />
+    </div>
+    <div class="mb-3">
+        <label asp-for="Dto.Email" class="form-label">Email</label>
+        <input asp-for="Dto.Email" class="form-control" type="email" />
+    </div>
+    <div class="mb-3">
+        <label asp-for="Dto.Password" class="form-label">Password</label>
+        <input asp-for="Dto.Password" class="form-control" type="password" required />
+    </div>
+    <button type="submit" class="btn btn-primary">Create user</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+</form>

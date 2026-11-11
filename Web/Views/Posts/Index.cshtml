@@ -1,0 +1,41 @@
+@model Web.ViewModels.PostIndexViewModel
+@{
+    ViewData["Title"] = "Posts";
+}
+
+<h2>Posts</h2>
+<p><a asp-action="Create" class="btn btn-primary">Crear publicación</a></p>
+
+<table class="table table-striped mt-3">
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>Slug</th>
+            <th>Published</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (Model?.Posts?.Any() != true)
+        {
+            <tr><td colspan="4" class="text-center">No posts found.</td></tr>
+        }
+        @foreach (var post in Model?.Posts ?? Enumerable.Empty<Application.DTOs.PostDto>())
+        {
+            if (post is not null)
+            {
+                <tr>
+                    <td><a asp-controller="Posts" asp-action="Details" asp-route-id="@post.Id">@post.Title</a></td>
+                    <td>@post.Slug</td>
+                    <td>@(post.IsPublished ? "Yes" : "No")</td>
+                    <td>
+                        <a asp-controller="Posts" asp-action="Details" asp-route-id="@post.Id" class="btn btn-sm btn-outline-primary">Details</a>
+                        <a asp-controller="Posts" asp-action="Edit" asp-route-id="@post.Id" class="btn btn-sm btn-outline-secondary">Editar</a>
+                        <a asp-controller="Comments" asp-action="Index" asp-route-postId="@post.Id" class="btn btn-sm btn-outline-info">Comentarios</a>
+                        <a asp-controller="Posts" asp-action="Delete" asp-route-id="@post.Id" class="btn btn-sm btn-outline-danger">Eliminar</a>
+                    </td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>

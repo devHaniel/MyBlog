@@ -1,0 +1,123 @@
+@model Web.Models.PostDetailViewModel
+@{
+    ViewData["Title"] = Model.Post.Title;
+}
+
+<article class="blog-post">
+    <header class="blog-post__header">
+        <a class="blog-post__back" asp-controller="Home" asp-action="Index">← Volver al blog</a>
+
+        @if (Model.Categories.Any())
+        {
+            <nav class="blog-post__categories" aria-label="Categorías">
+                @foreach (var category in Model.Categories)
+                {
+                    <a asp-controller="Home" asp-action="ByCategory" asp-route-slug="@category.Slug">
+                        @category.Name
+                    </a>
+                }
+            </nav>
+        }
+
+        <h1 class="blog-post__title">@Model.Post.Title</h1>
+        <p class="blog-post__meta">
+            Por <span>@Model.Post.AuthorName</span>
+            <span aria-hidden="true">·</span>
+            <time datetime="@((Model.Post.PublishedAt ?? Model.Post.CreatedAt).ToString("yyyy-MM-dd"))">
+                @((Model.Post.PublishedAt ?? Model.Post.CreatedAt).ToString("dd 'de' MMMM 'de' yyyy"))
+            </time>
+        </p>
+    </header>
+
+    @if (!string.IsNullOrWhiteSpace(Model.Post.CoverImage))
+    {
+        <figure class="blog-post__cover">
+            <img src="@Model.Post.CoverImage" alt="@Model.Post.Title" />
+        </figure>
+    }
+
+    <div class="blog-post__body">
+        @if (!string.IsNullOrWhiteSpace(Model.Post.Excerpt))
+        {
+            <p class="blog-post__excerpt">@Model.Post.Excerpt</p>
+        }
+
+        @if (!string.IsNullOrWhiteSpace(Model.Post.Content))
+        {
+            <div class="blog-post__intro">@Model.Post.Content</div>
+        }
+
+        @foreach (var article in Model.Post.Articles.OrderBy(article => article.Order))
+        {
+            var articleStyle = article.ContentType switch
+            {
+                "Heading" => "blog-article__content--heading",
+                "Quote" => "blog-article__content--quote",
+                _ => string.Empty
+            };
+            <section class="blog-article">
+                @if (string.Equals(article.ContentType, "Code", StringComparison.OrdinalIgnoreCase))
+                {
+                    <pre class="blog-article__code"><code>@article.Content</code></pre>
+                }
+                else
+                {
+                    <div class="blog-article__content @articleStyle">@Html.Raw(article.Content)</div>
+                }
+            </section>
+        }
+    </div>
+
+    <section class="blog-comments" aria-labelledby="comments-heading">
+        <h2 id="comments-heading" class="blog-comments__title">
+            Comentarios <span>(@Model.Comments.Count)</span>
+        </h2>
+
+        @if (TempData["CommentSubmitted"] is string commentMessage)
+        {
+            <div class="alert alert-success">@commentMessage</div>
+        }
+
+        @if (Model.Comments.Any())
+        {
+            <div class="blog-comments__list">
+                @foreach (var comment in Model.Comments)
+                {
+                    <article class="blog-comment">
+                        <div class="blog-comment__meta">
+                            <strong>@comment.AuthorName</strong>
+                            <time datetime="@comment.CreatedAt.ToString("yyyy-MM-ddTHH:mm:ss")">
+                                @comment.CreatedAt.ToString("dd/MM/yyyy")
+                            </time>
+                        </div>
+                        <p>@comment.Content</p>
+                    </article>
+                }
+            </div>
+        }
+        else
+        {
+            <p class="blog-comments__empty">Aún no hay comentarios.</p>
+        }
+
+        @if (User.Identity?.IsAuthenticated == true)
+        {
+            <form class="blog-comments__form" asp-controller="Home" asp-action="AddComment" method="post">
+                <input type="hidden" name="slug" value="@Model.Post.Slug" />
+                <label for="comment-content">Deja un comentario</label>
+                <textarea id="comment-content" class="form-control" name="content" rows="4" required
+                          placeholder="Escribe tu comentario..."></textarea>
+                <button type="submit" class="btn btn-dark">Enviar comentario</button>
+            </form>
+        }
+        else
+        {
+            <p class="blog-comments__sign-in">
+                <a asp-controller="Account" asp-action="Login" asp-route-returnUrl="@Context.Request.Path">
+                    Inicia sesión
+                </a>
+                para dejar un comentario.
+            </p>
+        }
+    </section>
+</article>

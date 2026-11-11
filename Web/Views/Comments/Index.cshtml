@@ -1,0 +1,43 @@
+@model Web.ViewModels.CommentIndexViewModel
+@{
+    ViewData["Title"] = "Comments";
+}
+
+<h2>Comments</h2>
+
+<p>Post ID: <em>@Model.PostId</em></p>
+<p><a asp-action="Create" asp-route-postId="@Model.PostId" class="btn btn-primary">Crear comentario</a></p>
+
+<table class="table table-striped mt-3">
+    <thead>
+        <tr>
+            <th>Author</th>
+            <th>Content</th>
+            <th>Approved</th>
+            <th>Created At</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (Model?.Comments?.Any() != true)
+        {
+            <tr><td colspan="5" class="text-center">No comments found.</td></tr>
+        }
+        @foreach (var comment in Model?.Comments ?? Enumerable.Empty<Application.DTOs.CommentDto>())
+        {
+            if (comment is not null)
+            {
+                <tr>
+                    <td>@comment.AuthorName</td>
+                    <td>@comment.Content</td>
+                    <td>@(comment.IsApproved ? "Yes" : "No")</td>
+                    <td>@comment.CreatedAt.ToShortDateString()</td>
+                    <td>
+                        <a asp-action="Edit" asp-route-id="@comment.Id" class="btn btn-sm btn-outline-secondary">Editar / moderar</a>
+                        <a asp-action="Delete" asp-route-id="@comment.Id" class="btn btn-sm btn-outline-danger">Eliminar</a>
+                    </td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>

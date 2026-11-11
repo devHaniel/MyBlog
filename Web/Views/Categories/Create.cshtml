@@ -1,0 +1,24 @@
+@model Web.ViewModels.CreateCategoryViewModel
+@{
+    ViewData["Title"] = "Create category";
+}
+
+<h1>Create category</h1>
+<form asp-action="Create" method="post">
+    @Html.AntiForgeryToken()
+    <div asp-validation-summary="All" class="text-danger"></div>
+    <div class="mb-3">
+        <label asp-for="Dto.Name" class="form-label">Name</label>
+        <input asp-for="Dto.Name" class="form-control" required />
+    </div>
+    <div class="mb-3">
+        <label asp-for="Dto.Slug" class="form-label">Slug</label>
+        <input asp-for="Dto.Slug" class="form-control" required />
+    </div>
+    <div class="mb-3">
+        <label asp-for="Dto.Description" class="form-label">Description</label>
+        <textarea asp-for="Dto.Description" class="form-control" rows="3"></textarea>
+    </div>
+    <button type="submit" class="btn btn-primary">Create</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+</form>

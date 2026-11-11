@@ -1,0 +1,19 @@
+@model bool
+@{
+    ViewData["Title"] = "Confirmación de correo";
+}
+
+<div class="py-5 text-center">
+    @if (Model)
+    {
+        <h1>Correo confirmado</h1>
+        <p class="lead">Tu cuenta de visitante está lista. Ya puedes iniciar sesión.</p>
+        <a asp-action="Login" class="btn btn-dark">Iniciar sesión</a>
+    }
+    else
+    {
+        <h1>No se pudo confirmar el correo</h1>
+        <p class="lead">El enlace no es válido o ya no está disponible. Regístrate de nuevo o solicita ayuda.</p>
+        <a asp-action="Register" class="btn btn-outline-dark">Crear cuenta</a>
+    }
+</div>

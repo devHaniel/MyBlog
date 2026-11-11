@@ -1,6 +1,150 @@
-﻿@{
-    ViewData["Title"] = "Privacy Policy";
+@using Microsoft.Extensions.Options
+@using Web.Models
+@inject IOptions<SiteLegalOptions> LegalOptionsAccessor
+@{
+    ViewData["Title"] = "Política de privacidad";
+    var legal = LegalOptionsAccessor.Value;
+    var hasPrivacyEmail = legal.PrivacyEmail.Contains('@') &&
+        !legal.PrivacyEmail.StartsWith("PENDIENTE", StringComparison.OrdinalIgnoreCase);
 }
-<h1>@ViewData["Title"]</h1>
 
-<p>Use this page to detail your site's privacy policy.</p>
+<article class="legal-page">
+    <header class="legal-page__header">
+        <p class="legal-page__eyebrow">Información legal</p>
+        <h1>Política de privacidad</h1>
+        <p class="legal-page__updated">Última actualización: @legal.LastUpdated</p>
+    </header>
+
+    <div class="legal-page__notice" role="note">
+        <strong>Borrador pendiente de completar y revisar.</strong>
+        Esta página describe las funciones implementadas en el blog. Antes de publicar el sitio,
+        completa los datos marcados como pendientes y verifica este texto con asesoría legal
+        familiarizada con la normativa aplicable en Honduras y en los lugares donde tengas usuarios.
+    </div>
+
+    <div class="legal-page__body">
+        <p>
+            Esta política explica cómo
+            <strong>@legal.ResponsibleName</strong> (en adelante, “el responsable”)
+            trata la información personal cuando visitas o utilizas
+            <strong>@legal.Domain</strong> (el “sitio”).
+        </p>
+
+        <h2>1. Responsable y contacto</h2>
+        <ul>
+            <li><strong>Responsable:</strong> @legal.ResponsibleName</li>
+            <li><strong>Ubicación:</strong> @legal.BusinessAddress, @legal.Jurisdiction</li>
+            <li>
+                <strong>Contacto para privacidad:</strong>
+                @if (hasPrivacyEmail)
+                {
+                    <a href="mailto:@legal.PrivacyEmail">@legal.PrivacyEmail</a>
+                }
+                else
+                {
+                    @legal.PrivacyEmail
+                }
+            </li>
+        </ul>
+
+        <h2>2. Información que tratamos</h2>
+        <ul>
+            <li>
+                <strong>Cuenta:</strong> nombre, correo electrónico, identificador de usuario,
+                fecha de creación y estado de confirmación del correo. La contraseña se administra
+                mediante ASP.NET Core Identity; la aplicación no la almacena como texto legible.
+            </li>
+            <li>
+                <strong>Comentarios:</strong> contenido, autor, publicación relacionada, fecha y
+                estado de aprobación. Las respuestas conservan la referencia al comentario al que responden.
+            </li>
+            <li>
+                <strong>Datos técnicos necesarios:</strong> cookies de autenticación y seguridad,
+                además de los datos técnicos que el proveedor de alojamiento procese para operar y
+                proteger el sitio. Confirma los datos concretos con ese proveedor.
+            </li>
+        </ul>
+
+        <h2>3. Para qué usamos la información</h2>
+        <ul>
+            <li>Crear y administrar cuentas y confirmar direcciones de correo.</li>
+            <li>Permitir la publicación, moderación y respuesta a comentarios.</li>
+            <li>Mantener la seguridad, prevenir uso abusivo y resolver incidencias.</li>
+            <li>Atender solicitudes relacionadas con la cuenta y la privacidad.</li>
+        </ul>
+        <p>
+            El banner “Suscríbete” actualmente dirige al registro de una cuenta. El sitio no tiene
+            implementado un boletín promocional; el correo de la cuenta se utiliza para confirmación
+            y comunicaciones operativas descritas aquí, no para enviar campañas de marketing.
+        </p>
+
+        <h2>4. Base y necesidad del tratamiento</h2>
+        <p>
+            Los datos de cuenta y comentarios se utilizan para prestar las funciones que solicita
+            la persona usuaria y para proteger el servicio. El responsable debe confirmar y documentar
+            la base jurídica aplicable a cada finalidad conforme a la normativa pertinente. No uses
+            esta plantilla como una determinación legal de dicha base.
+        </p>
+
+        <h2>5. Proveedores y comunicaciones de datos</h2>
+        <p>
+            Los datos se almacenan en una base PostgreSQL operada por el responsable o por el
+            proveedor de alojamiento identificado aquí:
+            <strong>@legal.HostingProvider</strong>. El envío de confirmaciones de correo puede
+            utilizar <strong>@legal.EmailProvider</strong>. Completa los nombres y ubicaciones
+            reales de los proveedores antes de publicar.
+        </p>
+        <p>
+            No se ha configurado en la aplicación una herramienta de analítica o publicidad. No
+            obstante, los proveedores de alojamiento, correo y las plataformas externas a las que
+            enlaza el sitio pueden tratar datos conforme a sus propias políticas. Si se agregan
+            nuevas integraciones, esta política deberá actualizarse antes de activarlas.
+        </p>
+
+        <h2>6. Conservación y eliminación</h2>
+        <p>
+            Los datos se conservan mientras la cuenta y las funciones asociadas estén activas y
+            durante el tiempo adicional que resulte necesario por seguridad o por obligaciones
+            aplicables. No hay un plazo automático de retención publicado en este momento. Para
+            solicitar acceso, corrección o eliminación, escribe al correo de privacidad; el
+            responsable verificará la solicitud y explicará cualquier dato que deba conservarse.
+        </p>
+
+        <h2>7. Derechos y solicitudes</h2>
+        <p>
+            Puedes contactar al responsable para consultar qué información trata, pedir su
+            corrección o solicitar su eliminación cuando corresponda. Los derechos, plazos,
+            excepciones y mecanismos de reclamación dependen de la normativa aplicable y deben
+            confirmarse con asesoría local. Incluye en tu solicitud el correo de la cuenta para
+            que podamos verificarla sin pedir tu contraseña.
+        </p>
+
+        <h2>8. Seguridad</h2>
+        <p>
+            El sistema aplica controles de autenticación, confirmación de correo, autorización
+            para administración y protección de formularios. Ningún sistema conectado a Internet
+            puede garantizar seguridad absoluta. El responsable debe completar estas medidas con
+            HTTPS, copias de seguridad, actualización de dependencias, acceso restringido y un
+            procedimiento para atender incidentes.
+        </p>
+
+        <h2>9. Cambios a esta política</h2>
+        <p>
+            Si cambian las funciones, proveedores o usos de datos, esta política se actualizará
+            antes o al momento de aplicar el cambio. La fecha indicada al inicio identifica la
+            versión publicada.
+        </p>
+
+        <p class="legal-page__contact">
+            Contacto de privacidad:
+            @if (hasPrivacyEmail)
+            {
+                <a href="mailto:@legal.PrivacyEmail">@legal.PrivacyEmail</a>
+            }
+            else
+            {
+                @legal.PrivacyEmail
+            }
+        </p>
+    </div>
+</article>

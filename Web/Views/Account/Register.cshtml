@@ -31,6 +31,11 @@
                 <input asp-for="ConfirmPassword" class="form-control" autocomplete="new-password" />
                 <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
             </div>
+            <p class="small text-muted">
+                Usaremos tus datos para crear y proteger tu cuenta. Consulta la
+                <a asp-controller="Home" asp-action="Privacy">Política de privacidad</a>
+                para conocer los detalles.
+            </p>
             <button type="submit" class="btn btn-dark">Crear cuenta</button>
             <a asp-action="Login" class="btn btn-link">Ya tengo una cuenta</a>
         </form>

@@ -49,7 +49,9 @@ public class ApplicationMappingProfile : Profile
             .ForMember(destination => destination.Id, options => options.Ignore())
             .ForMember(destination => destination.CreatedAt, options => options.Ignore())
             .ForMember(destination => destination.Post, options => options.Ignore())
-            .ForMember(destination => destination.Author, options => options.Ignore());
+            .ForMember(destination => destination.Author, options => options.Ignore())
+            .ForMember(destination => destination.ParentComment, options => options.Ignore())
+            .ForMember(destination => destination.Replies, options => options.Ignore());
 
         CreateMap<Comment, CommentDto>()
             .ForCtorParam("AuthorName", options => options.MapFrom(source => source.Author.FullName));
@@ -61,6 +63,9 @@ public class ApplicationMappingProfile : Profile
             .ForMember(destination => destination.Post, options => options.Ignore())
             .ForMember(destination => destination.AuthorId, options => options.Ignore())
             .ForMember(destination => destination.Author, options => options.Ignore())
+            .ForMember(destination => destination.ParentCommentId, options => options.Ignore())
+            .ForMember(destination => destination.ParentComment, options => options.Ignore())
+            .ForMember(destination => destination.Replies, options => options.Ignore())
             .ForAllMembers(options =>
                 options.Condition((_, _, sourceMember) => sourceMember is not null));
     }

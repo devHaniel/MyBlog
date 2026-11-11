@@ -1,123 +1,234 @@
 @model Web.Models.PostDetailViewModel
+@using Microsoft.Extensions.Options
+@using Web.Models
+@inject IOptions<SiteContentOptions> SiteContentOptionsAccessor
 @{
     ViewData["Title"] = Model.Post.Title;
+    ViewData["FullWidth"] = true;
+    ViewData["CanonicalUrl"] = Url.RouteUrl(
+        "post-detail",
+        new { slug = Model.Post.Slug },
+        Context.Request.Scheme);
+    var siteContent = SiteContentOptionsAccessor.Value;
+    var authorInitials = string.Join(
+        "",
+        Model.Post.AuthorName
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+            .Take(2)
+            .Select(name => name[0]))
+        .ToUpperInvariant();
+    var commentCount = Model.Comments.Count;
 }
 
 <article class="blog-post">
-    <header class="blog-post__header">
-        <a class="blog-post__back" asp-controller="Home" asp-action="Index">← Volver al blog</a>
-
-        @if (Model.Categories.Any())
-        {
-            <nav class="blog-post__categories" aria-label="Categorías">
-                @foreach (var category in Model.Categories)
+    <header class="blog-post__hero">
+        <div class="blog-post__hero-inner">
+            <div class="blog-post__categories" aria-label="Categorías">
+                @if (Model.Categories.Any())
                 {
-                    <a asp-controller="Home" asp-action="ByCategory" asp-route-slug="@category.Slug">
-                        @category.Name
-                    </a>
-                }
-            </nav>
-        }
-
-        <h1 class="blog-post__title">@Model.Post.Title</h1>
-        <p class="blog-post__meta">
-            Por <span>@Model.Post.AuthorName</span>
-            <span aria-hidden="true">·</span>
-            <time datetime="@((Model.Post.PublishedAt ?? Model.Post.CreatedAt).ToString("yyyy-MM-dd"))">
-                @((Model.Post.PublishedAt ?? Model.Post.CreatedAt).ToString("dd 'de' MMMM 'de' yyyy"))
-            </time>
-        </p>
-    </header>
-
-    @if (!string.IsNullOrWhiteSpace(Model.Post.CoverImage))
-    {
-        <figure class="blog-post__cover">
-            <img src="@Model.Post.CoverImage" alt="@Model.Post.Title" />
-        </figure>
-    }
-
-    <div class="blog-post__body">
-        @if (!string.IsNullOrWhiteSpace(Model.Post.Excerpt))
-        {
-            <p class="blog-post__excerpt">@Model.Post.Excerpt</p>
-        }
-
-        @if (!string.IsNullOrWhiteSpace(Model.Post.Content))
-        {
-            <div class="blog-post__intro">@Model.Post.Content</div>
-        }
-
-        @foreach (var article in Model.Post.Articles.OrderBy(article => article.Order))
-        {
-            var articleStyle = article.ContentType switch
-            {
-                "Heading" => "blog-article__content--heading",
-                "Quote" => "blog-article__content--quote",
-                _ => string.Empty
-            };
-            <section class="blog-article">
-                @if (string.Equals(article.ContentType, "Code", StringComparison.OrdinalIgnoreCase))
-                {
-                    <pre class="blog-article__code"><code>@article.Content</code></pre>
+                    @foreach (var category in Model.Categories)
+                    {
+                        <a asp-controller="Home" asp-action="ByCategory" asp-route-slug="@category.Slug">
+                            @category.Name
+                        </a>
+                    }
                 }
                 else
                 {
-                    <div class="blog-article__content @articleStyle">@Html.Raw(article.Content)</div>
-                }
-            </section>
-        }
-    </div>
-
-    <section class="blog-comments" aria-labelledby="comments-heading">
-        <h2 id="comments-heading" class="blog-comments__title">
-            Comentarios <span>(@Model.Comments.Count)</span>
-        </h2>
-
-        @if (TempData["CommentSubmitted"] is string commentMessage)
-        {
-            <div class="alert alert-success">@commentMessage</div>
-        }
-
-        @if (Model.Comments.Any())
-        {
-            <div class="blog-comments__list">
-                @foreach (var comment in Model.Comments)
-                {
-                    <article class="blog-comment">
-                        <div class="blog-comment__meta">
-                            <strong>@comment.AuthorName</strong>
-                            <time datetime="@comment.CreatedAt.ToString("yyyy-MM-ddTHH:mm:ss")">
-                                @comment.CreatedAt.ToString("dd/MM/yyyy")
-                            </time>
-                        </div>
-                        <p>@comment.Content</p>
-                    </article>
+                    <span>Blog</span>
                 }
             </div>
-        }
-        else
+
+            <h1 class="blog-post__title">@Model.Post.Title</h1>
+
+            <div class="blog-post__meta">
+                <div class="blog-post__author">
+                    <span class="blog-post__avatar" aria-hidden="true">@authorInitials</span>
+                    <div class="blog-post__author-details">
+                        <span>
+                            Por:
+                            <a asp-controller="Home" asp-action="ByAuthor" asp-route-userName="@Model.Post.AuthorName">
+                                @Model.Post.AuthorName
+                            </a>
+                        </span>
+                        <time datetime="@((Model.Post.PublishedAt ?? Model.Post.CreatedAt).ToString("yyyy-MM-dd"))">
+                            @((Model.Post.PublishedAt ?? Model.Post.CreatedAt).ToString("dd 'de' MMMM 'de' yyyy"))
+                        </time>
+                    </div>
+                </div>
+
+                <a class="blog-post__comments-link" href="#comments">
+                    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none">
+                        <path d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5H5l1.8-3.1A7.5 7.5 0 1 1 20 11.5Z"
+                              stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                    @if (commentCount == 0)
+                    {
+                        <span>Sé el primero en comentar</span>
+                    }
+                    else
+                    {
+                        <span>Ver los @commentCount comentario@(commentCount == 1 ? "" : "s")</span>
+                    }
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <div class="blog-post__reading-column">
+        @if (!string.IsNullOrWhiteSpace(Model.Post.CoverImage))
         {
-            <p class="blog-comments__empty">Aún no hay comentarios.</p>
+            <figure class="blog-post__cover">
+                <img src="@Model.Post.CoverImage" alt="@Model.Post.Title" />
+            </figure>
         }
 
-        @if (User.Identity?.IsAuthenticated == true)
-        {
-            <form class="blog-comments__form" asp-controller="Home" asp-action="AddComment" method="post">
-                <input type="hidden" name="slug" value="@Model.Post.Slug" />
-                <label for="comment-content">Deja un comentario</label>
-                <textarea id="comment-content" class="form-control" name="content" rows="4" required
-                          placeholder="Escribe tu comentario..."></textarea>
-                <button type="submit" class="btn btn-dark">Enviar comentario</button>
-            </form>
-        }
-        else
-        {
-            <p class="blog-comments__sign-in">
-                <a asp-controller="Account" asp-action="Login" asp-route-returnUrl="@Context.Request.Path">
-                    Inicia sesión
-                </a>
-                para dejar un comentario.
-            </p>
-        }
+        <div class="blog-post__body">
+            @if (!string.IsNullOrWhiteSpace(Model.Post.Excerpt))
+            {
+                <p class="blog-post__excerpt">@Model.Post.Excerpt</p>
+            }
+
+            @if (!string.IsNullOrWhiteSpace(Model.Post.Content))
+            {
+                <div class="blog-post__intro">@Html.Raw(Model.Post.Content)</div>
+            }
+
+            @foreach (var article in Model.Post.Articles.OrderBy(article => article.Order))
+            {
+                var articleStyle = article.ContentType switch
+                {
+                    "Heading" => "blog-article__content--heading",
+                    "Quote" => "blog-article__content--quote",
+                    _ => string.Empty
+                };
+                var articleType = article.ContentType.ToLowerInvariant();
+                <section class="blog-article blog-article--@articleType">
+                    @if (string.Equals(article.ContentType, "Code", StringComparison.OrdinalIgnoreCase))
+                    {
+                        <pre class="blog-article__code"><code>@article.Content</code></pre>
+                    }
+                    else
+                    {
+                        <div class="blog-article__content @articleStyle"
+                             aria-level="@(article.ContentType == "Heading" ? "2" : null)"
+                             role="@(article.ContentType == "Heading" ? "heading" : null)">@Html.Raw(article.Content)</div>
+                    }
+                </section>
+            }
+        </div>
+
+    </div>
+
+    <section class="blog-subscription" aria-labelledby="subscription-heading">
+        <div class="blog-subscription__inner">
+            <h2 id="subscription-heading">@siteContent.SubscriptionTitle</h2>
+            <p>@siteContent.SubscriptionDescription</p>
+            <a href="@siteContent.SubscriptionButtonUrl">@siteContent.SubscriptionButtonText</a>
+        </div>
     </section>
+
+    <div class="blog-post__reading-column">
+        <section class="blog-comments" id="comments" aria-labelledby="comments-heading">
+            <h2 id="comments-heading" class="blog-comments__title">
+                <span class="blog-comments__count">@commentCount</span>
+                <span class="blog-comments__label">Comentario@(commentCount == 1 ? "" : "s")</span>
+            </h2>
+
+            @if (TempData["CommentSubmitted"] is string commentMessage)
+            {
+                <div class="blog-comments__notice blog-comments__notice--success" role="status">@commentMessage</div>
+            }
+            @if (TempData["CommentError"] is string commentError)
+            {
+                <div class="blog-comments__notice blog-comments__notice--error" role="alert">@commentError</div>
+            }
+
+            @if (Model.CommentThreads.Any())
+            {
+                <div class="blog-comments__list">
+                    @foreach (var thread in Model.CommentThreads)
+                    {
+                        @await Html.PartialAsync("_Comment", thread)
+                    }
+                </div>
+            }
+            else
+            {
+                <p class="blog-comments__empty">Sé el primero en comentar.</p>
+            }
+
+            <div class="blog-comments__compose">
+                <h3>Deja tu comentario</h3>
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <form id="comment-form" class="blog-comments__form" asp-controller="Home" asp-action="AddComment" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="slug" value="@Model.Post.Slug" />
+                        <input type="hidden" id="parent-comment-id" name="parentCommentId" value="" />
+                        <p id="reply-context" class="blog-comments__reply-context" hidden>
+                            Respondiendo a <strong id="reply-author"></strong>
+                            <button type="button" id="cancel-reply" class="blog-comments__cancel-reply">Cancelar respuesta</button>
+                        </p>
+                        <div class="blog-comments__identity">
+                            <div class="blog-comments__field">
+                                <label for="comment-name">Nombre</label>
+                                <input id="comment-name" class="form-control" type="text" value="@Model.CurrentUserName" readonly />
+                            </div>
+                            <div class="blog-comments__field">
+                                <label for="comment-email">Correo electrónico</label>
+                                <input id="comment-email" class="form-control" type="email" value="@Model.CurrentUserEmail" readonly />
+                            </div>
+                        </div>
+                        <div class="blog-comments__field">
+                            <label for="comment-content">Comentario</label>
+                            <textarea id="comment-content" class="form-control" name="content" rows="5"
+                                      maxlength="2000" required placeholder="Escribe tu comentario..."></textarea>
+                            <span class="blog-comments__hint">Máximo 2000 caracteres. Tu comentario será revisado antes de publicarse.</span>
+                        </div>
+                        <button type="submit" class="blog-comments__submit">Publicar comentario</button>
+                    </form>
+                }
+                else
+                {
+                    <p class="blog-comments__sign-in">
+                        <a asp-controller="Account" asp-action="Login" asp-route-returnUrl="@Context.Request.Path">
+                            Inicia sesión
+                        </a>
+                        para comentar con tu nombre y correo de cuenta.
+                    </p>
+                }
+            </div>
+        </section>
+    </div>
 </article>
+
+@if (User.Identity?.IsAuthenticated == true)
+{
+    @section Scripts {
+        <script>
+            (() => {
+                const parentInput = document.getElementById("parent-comment-id");
+                const replyContext = document.getElementById("reply-context");
+                const replyAuthor = document.getElementById("reply-author");
+                const form = document.getElementById("comment-form");
+                const content = document.getElementById("comment-content");
+
+                document.querySelectorAll(".blog-comment__reply").forEach(button => {
+                    button.addEventListener("click", () => {
+                        parentInput.value = button.dataset.commentId;
+                        replyAuthor.textContent = button.dataset.author;
+                        replyContext.hidden = false;
+                        content.focus();
+                        form.scrollIntoView({ behavior: "smooth", block: "center" });
+                    });
+                });
+
+                document.getElementById("cancel-reply").addEventListener("click", () => {
+                    parentInput.value = "";
+                    replyContext.hidden = true;
+                });
+            })();
+        </script>
+    }
+}

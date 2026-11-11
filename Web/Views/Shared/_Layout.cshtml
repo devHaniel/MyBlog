@@ -1,9 +1,19 @@
-﻿<!DOCTYPE html>
+﻿@using Microsoft.Extensions.Options
+@using Web.Models
+@inject IOptions<SiteContentOptions> SiteContentOptionsAccessor
+@{
+    var siteContent = SiteContentOptionsAccessor.Value;
+}
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - Web</title>
+    @if (ViewData["CanonicalUrl"] is string canonicalUrl)
+    {
+        <link rel="canonical" href="@canonicalUrl" />
+    }
     <script type="importmap"></script>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
@@ -11,21 +21,29 @@
 </head>
 <body>
     <header>
-        <nav class="navbar navbar-expand-sm navbar-light site-navbar">
-            <div class="container">
-                <a class="navbar-brand site-navbar__brand" asp-area="" asp-controller="Home" asp-action="Index">Blog</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Abrir navegación">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
+        <nav class="navbar navbar-expand-lg site-navbar">
+            <div class="site-navbar__container">
+                <a class="navbar-brand site-navbar__brand" asp-area="" asp-controller="Home" asp-action="Index">@siteContent.SiteName</a>
+                <div class="site-navbar__controls">
+                    <a class="site-navbar__cta" href="@siteContent.SubscriptionButtonUrl">@siteContent.SubscriptionButtonText</a>
+                    <button class="navbar-toggler site-navbar__toggler" type="button" data-bs-toggle="collapse" data-bs-target="#siteNavigation" aria-controls="siteNavigation"
+                            aria-expanded="false" aria-label="Abrir navegación">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                </div>
+                <div class="navbar-collapse collapse site-navbar__collapse" id="siteNavigation">
+                    <ul class="navbar-nav site-navbar__links">
                         <li class="nav-item">
                             <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">Inicio</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Privacy">Privacidad</a>
+                            <a class="nav-link" href="https://learn.microsoft.com/es-es/dotnet/" target="_blank" rel="noopener noreferrer">Recursos</a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index" asp-fragment="publicaciones">Blog</a>
+                        </li>
+                    </ul>
+                    <ul class="navbar-nav site-navbar__account">
                         @if (User.IsInRole("Admin"))
                         {
                             <li class="nav-item">
@@ -52,24 +70,84 @@
                             <li class="nav-item">
                                 <a class="nav-link" asp-controller="Account" asp-action="Login">Iniciar sesión</a>
                             </li>
-                            <li class="nav-item">
-                                <a class="nav-link" asp-controller="Account" asp-action="Register">Crear cuenta</a>
-                            </li>
                         }
                     </ul>
                 </div>
             </div>
         </nav>
     </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
-    </div>
+    <main role="main" class="pb-3 @(ViewData["FullWidth"] is true ? "site-main--full-width" : "container")">
+        @RenderBody()
+    </main>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - Blog - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacidad</a>
+    <footer class="site-footer">
+        <div class="site-footer__container">
+            <div class="site-footer__main">
+                <section class="site-footer__brand" aria-label="Acerca del sitio">
+                    <a class="site-footer__name" asp-controller="Home" asp-action="Index">@siteContent.SiteName</a>
+                    <p>@siteContent.FooterSlogan</p>
+                </section>
+
+                <nav class="site-footer__link-groups" aria-label="Enlaces del pie de página">
+                    <div class="site-footer__link-group">
+                        <h2>Recursos</h2>
+                        @foreach (var link in siteContent.ResourceLinks)
+                        {
+                            <a href="@link.Url">@link.Text</a>
+                        }
+                    </div>
+                    <div class="site-footer__link-group">
+                        <h2>Destacados</h2>
+                        @foreach (var link in siteContent.FeaturedLinks)
+                        {
+                            <a href="@link.Url">@link.Text</a>
+                        }
+                    </div>
+                </nav>
+
+                <section class="site-footer__social">
+                    <h2>Conéctate con nosotros</h2>
+                    <div class="site-footer__social-links">
+                        @foreach (var social in siteContent.SocialLinks)
+                        {
+                            <a href="@social.Url" aria-label="@social.Name" target="_blank" rel="noopener noreferrer">
+                                @switch (social.Name.ToLowerInvariant())
+                                {
+                                    case "youtube":
+                                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                                            <path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.6 12 3.6 12 3.6s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8ZM9.6 15.6V8.4l6.3 3.6-6.3 3.6Z" />
+                                        </svg>
+                                        break;
+                                    case "instagram":
+                                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                                            <rect x="3" y="3" width="18" height="18" rx="5" />
+                                            <circle cx="12" cy="12" r="4" />
+                                            <circle class="site-footer__social-dot" cx="17.5" cy="6.8" r="1" />
+                                        </svg>
+                                        break;
+                                    default:
+                                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                                            <path d="M18.9 2H22l-6.8 7.8L23.2 22h-6.3L12 14.7 5.6 22H2.4l7.3-8.4L1.8 2h6.5l4.5 6.7L18.9 2Zm-1.1 18h1.7L7.3 3.9H5.5L17.8 20Z" />
+                                        </svg>
+                                        break;
+                                }
+                            </a>
+                        }
+                    </div>
+                </section>
+            </div>
+
+            <div class="site-footer__bottom">
+                <p>
+                    ©@DateTime.Now.Year · <a href="/">@siteContent.FooterDomain</a> · Todos los derechos reservados.
+                </p>
+                <nav class="site-footer__legal" aria-label="Avisos legales">
+                    @foreach (var link in siteContent.LegalLinks)
+                    {
+                        <a href="@link.Url">@link.Text</a>
+                    }
+                </nav>
+            </div>
         </div>
     </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>

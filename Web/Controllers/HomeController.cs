@@ -4,6 +4,7 @@ using Application.DTOs;
 using Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Markdig;
 using Web.Models;
 
 namespace Web.Controllers;
@@ -14,17 +15,20 @@ public class HomeController : Controller
     private readonly ICategoryService _categoryService;
     private readonly ICommentService _commentService;
     private readonly IArticleContentSanitizer _articleContentSanitizer;
+    private readonly IUserService _userService;
 
     public HomeController(
         IPostService postService,
         ICategoryService categoryService,
         ICommentService commentService,
-        IArticleContentSanitizer articleContentSanitizer)
+        IArticleContentSanitizer articleContentSanitizer,
+        IUserService userService)
     {
         _postService = postService;
         _categoryService = categoryService;
         _commentService = commentService;
         _articleContentSanitizer = articleContentSanitizer;
+        _userService = userService;
     }
 
     public async Task<IActionResult> Index()
@@ -41,6 +45,8 @@ public class HomeController : Controller
         return View(model);
     }
 
+    [HttpGet("/posts/{slug}", Name = "post-detail")]
+    [HttpGet("/Home/Detail", Name = "legacy-post-detail")]
     public async Task<IActionResult> Detail(string slug)
     {
         var post = await _postService.GetBySlugAsync(slug);
@@ -51,27 +57,37 @@ public class HomeController : Controller
 
         post = post with
         {
+            Content = string.IsNullOrWhiteSpace(post.Content)
+                ? post.Content
+                : _articleContentSanitizer.Sanitize(Markdown.ToHtml(post.Content)),
             Articles = post.Articles
                 .Select(article => article with
                 {
                     Content = string.Equals(article.ContentType, "Code", StringComparison.OrdinalIgnoreCase)
                         ? article.Content
-                        : _articleContentSanitizer.Sanitize(article.Content)
+                        : _articleContentSanitizer.Sanitize(Markdown.ToHtml(article.Content))
                 })
                 .ToList()
         };
 
-        var comments = await _commentService.GetByPostAsync(post.Id);
+        var comments = (await _commentService.GetByPostAsync(post.Id))
+            .Where(comment => comment.IsApproved || User.IsInRole("Admin"))
+            .ToList();
         var categories = await _categoryService.GetAllAsync();
+        var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var currentUser = currentUserId is null
+            ? null
+            : await _userService.GetByIdAsync(currentUserId);
         var model = new Web.Models.PostDetailViewModel
         {
             Post = post,
-            Comments = comments
-                .Where(comment => comment.IsApproved || User.IsInRole("Admin"))
-                .ToList(),
+            Comments = comments,
+            CommentThreads = BuildCommentThreads(comments),
             Categories = categories
                 .Where(category => post.CategoryIds.Contains(category.Id))
-                .ToList()
+                .ToList(),
+            CurrentUserName = currentUser?.FullName ?? User.Identity?.Name ?? string.Empty,
+            CurrentUserEmail = currentUser?.Email ?? User.FindFirstValue(ClaimTypes.Email) ?? string.Empty
         };
 
         return View(model);
@@ -121,11 +137,15 @@ public class HomeController : Controller
     [HttpPost]
     [ValidateAntiForgeryToken]
     [Authorize]
-    public async Task<IActionResult> AddComment(string slug, string content)
+    public async Task<IActionResult> AddComment(
+        string slug,
+        string content,
+        int? parentCommentId = null)
     {
-        if (string.IsNullOrWhiteSpace(content))
+        if (string.IsNullOrWhiteSpace(content) || content.Length > 2000)
         {
-            return BadRequest("El contenido del comentario es requerido.");
+            TempData["CommentError"] = "El comentario debe tener entre 1 y 2000 caracteres.";
+            return RedirectToPostComments(slug);
         }
 
         var post = await _postService.GetBySlugAsync(slug);
@@ -140,17 +160,77 @@ public class HomeController : Controller
             return Challenge();
         }
 
+        if (parentCommentId is int replyToId)
+        {
+            var parentComment = await _commentService.GetByIdAsync(replyToId);
+            if (parentComment is null ||
+                parentComment.PostId != post.Id ||
+                (!parentComment.IsApproved && !User.IsInRole("Admin")))
+            {
+                TempData["CommentError"] = "No se puede responder a ese comentario.";
+                return RedirectToPostComments(slug);
+            }
+        }
+
         await _commentService.CreateAsync(new CreateCommentDto(
             post.Id,
             authorId,
             content,
-            false));
+            false,
+            parentCommentId));
 
         TempData["CommentSubmitted"] = "Tu comentario se envió y está pendiente de aprobación.";
-        return RedirectToAction(nameof(Detail), new { slug });
+        return RedirectToPostComments(slug);
     }
 
+    private IActionResult RedirectToPostComments(string slug)
+    {
+        var postUrl = Url.RouteUrl("post-detail", new { slug })
+            ?? throw new InvalidOperationException("The public post route could not be generated.");
+
+        return Redirect($"{postUrl}#comments");
+    }
+
+    private static List<CommentThreadViewModel> BuildCommentThreads(
+        IReadOnlyCollection<CommentDto> comments)
+    {
+        var threads = comments.ToDictionary(
+            comment => comment.Id,
+            comment => new CommentThreadViewModel { Comment = comment });
+        var roots = new List<CommentThreadViewModel>();
+
+        foreach (var comment in comments)
+        {
+            var thread = threads[comment.Id];
+            if (comment.ParentCommentId is int parentId &&
+                parentId != comment.Id &&
+                threads.TryGetValue(parentId, out var parent))
+            {
+                parent.Replies.Add(thread);
+            }
+            else
+            {
+                roots.Add(thread);
+            }
+        }
+
+        return roots;
+    }
+
+    [HttpGet("/privacidad", Name = "privacy-policy")]
     public IActionResult Privacy()
+    {
+        return View();
+    }
+
+    [HttpGet("/cookies", Name = "cookie-policy")]
+    public IActionResult Cookies()
+    {
+        return View();
+    }
+
+    [HttpGet("/aviso-legal", Name = "legal-notice")]
+    public IActionResult LegalNotice()
     {
         return View();
     }

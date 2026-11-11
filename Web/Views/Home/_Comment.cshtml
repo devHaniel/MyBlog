@@ -1,0 +1,41 @@
+@model Web.Models.CommentThreadViewModel
+
+<article class="blog-comment" id="comment-@Model.Comment.Id">
+    <header class="blog-comment__header">
+        <span class="blog-comment__avatar" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="8" r="3.5" />
+                <path d="M5 20c.6-3.4 3.2-5.3 7-5.3s6.4 1.9 7 5.3" />
+            </svg>
+        </span>
+        <div class="blog-comment__author">
+            <strong>@Model.Comment.AuthorName dice:</strong>
+            <time datetime="@Model.Comment.CreatedAt.ToString("yyyy-MM-ddTHH:mm:ss")">
+                @Model.Comment.CreatedAt.ToString("dd 'de' MMMM 'de' yyyy")
+            </time>
+        </div>
+        @if (!Model.Comment.IsApproved)
+        {
+            <span class="blog-comment__pending">Pendiente de aprobación</span>
+        }
+        @if (User.Identity?.IsAuthenticated == true && Model.Comment.IsApproved)
+        {
+            <button type="button" class="blog-comment__reply"
+                    data-comment-id="@Model.Comment.Id"
+                    data-author="@Model.Comment.AuthorName">
+                Responder
+            </button>
+        }
+    </header>
+    <p class="blog-comment__content">@Model.Comment.Content</p>
+
+    @if (Model.Replies.Any())
+    {
+        <div class="blog-comment__replies">
+            @foreach (var reply in Model.Replies)
+            {
+                @await Html.PartialAsync("_Comment", reply)
+            }
+        </div>
+    }
+</article>

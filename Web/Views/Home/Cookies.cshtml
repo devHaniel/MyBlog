@@ -1,0 +1,88 @@
+@using Microsoft.Extensions.Options
+@using Web.Models
+@inject IOptions<SiteLegalOptions> LegalOptionsAccessor
+@{
+    ViewData["Title"] = "Política de cookies";
+    var legal = LegalOptionsAccessor.Value;
+    var hasPrivacyEmail = legal.PrivacyEmail.Contains('@') &&
+        !legal.PrivacyEmail.StartsWith("PENDIENTE", StringComparison.OrdinalIgnoreCase);
+}
+
+<article class="legal-page">
+    <header class="legal-page__header">
+        <p class="legal-page__eyebrow">Información legal</p>
+        <h1>Política de cookies</h1>
+        <p class="legal-page__updated">Última actualización: @legal.LastUpdated</p>
+    </header>
+
+    <div class="legal-page__notice" role="note">
+        <strong>Borrador pendiente de revisión.</strong>
+        Esta descripción corresponde a las funciones actualmente configuradas. Revisa las cookies
+        que realmente entrega el sitio en producción y confirma los requisitos aplicables en Honduras
+        antes de publicarlo.
+    </div>
+
+    <div class="legal-page__body">
+        <h2>¿Qué son las cookies?</h2>
+        <p>
+            Son pequeños datos que un sitio puede guardar en el navegador para recordar una sesión,
+            mantener la seguridad o conservar una preferencia.
+        </p>
+
+        <h2>Cookies necesarias para el funcionamiento</h2>
+        <p>
+            El blog utiliza cookies técnicas necesarias para las funciones que la persona solicita.
+            Según la configuración de ASP.NET Core, pueden incluir:
+        </p>
+        <ul>
+            <li>
+                <strong>Autenticación:</strong> mantiene la sesión al iniciar o cerrar sesión y
+                permite aplicar los permisos de visitante o administrador.
+            </li>
+            <li>
+                <strong>Antifalsificación:</strong> ayuda a proteger formularios que modifican
+                información, como registro, comentarios y cierre de sesión.
+            </li>
+            <li>
+                <strong>Mensajes temporales:</strong> puede conservar avisos breves entre el envío
+                de un formulario y la respuesta siguiente.
+            </li>
+        </ul>
+        <p>
+            Los nombres, duración y atributos exactos pueden variar con la versión y configuración
+            desplegadas. El responsable debe comprobarlos en el dominio final. La aplicación no
+            incorpora actualmente cookies propias de analítica, publicidad ni seguimiento entre sitios.
+        </p>
+
+        <h2>Cómo administrar cookies</h2>
+        <p>
+            Puedes consultar, bloquear o eliminar cookies desde los ajustes del navegador. Si
+            bloqueas las cookies necesarias, el inicio de sesión, los formularios o algunas
+            protecciones pueden dejar de funcionar.
+        </p>
+
+        <h2>Servicios de terceros</h2>
+        <p>
+            Los enlaces a sitios externos no instalan por sí mismos cookies de esos sitios. Si
+            decides abrirlos, dichos servicios pueden tratar información conforme a sus propias
+            políticas. Antes de activar analítica, publicidad, videos o contenido remoto, documenta
+            esas tecnologías y añade el mecanismo de información o consentimiento que exija la
+            legislación aplicable.
+        </p>
+
+        <h2>Contacto y responsable</h2>
+        <p>
+            Responsable: <strong>@legal.ResponsibleName</strong>, @legal.Jurisdiction.
+            Para consultas sobre cookies, escribe a
+            @if (hasPrivacyEmail)
+            {
+                <a href="mailto:@legal.PrivacyEmail">@legal.PrivacyEmail</a>
+            }
+            else
+            {
+                @legal.PrivacyEmail
+            }.
+            La identidad y el contacto deben completarse antes de publicar.
+        </p>
+    </div>
+</article>

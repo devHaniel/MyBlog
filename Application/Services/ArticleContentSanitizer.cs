@@ -13,7 +13,7 @@ public sealed class ArticleContentSanitizer : IArticleContentSanitizer
         _sanitizer.AllowedTags.Clear();
         _sanitizer.AllowedTags.UnionWith(
         [
-            "a", "blockquote", "br", "code", "div", "em", "h2", "h3", "h4", "hr",
+            "a", "blockquote", "br", "code", "div", "em", "h1", "h2", "h3", "h4", "hr",
             "i", "img", "li", "ol", "p", "pre", "span", "strong", "sub", "sup",
             "table", "tbody", "td", "tfoot", "th", "thead", "tr", "u", "ul"
         ]);

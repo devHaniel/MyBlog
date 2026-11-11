@@ -29,5 +29,14 @@ public class PostDetailViewModel
         0);
 
     public List<CommentDto> Comments { get; set; } = new();
+    public List<CommentThreadViewModel> CommentThreads { get; set; } = new();
     public List<CategoryDto> Categories { get; set; } = new();
+    public string CurrentUserName { get; set; } = string.Empty;
+    public string CurrentUserEmail { get; set; } = string.Empty;
+}
+
+public class CommentThreadViewModel
+{
+    public CommentDto Comment { get; set; } = null!;
+    public List<CommentThreadViewModel> Replies { get; set; } = new();
 }

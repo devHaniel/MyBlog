@@ -57,6 +57,12 @@ namespace Infrastructure.Data
                 .WithMany(p => p.Comments)
                 .HasForeignKey(c => c.PostId);
 
+            modelBuilder.Entity<Comment>()
+                .HasOne(c => c.ParentComment)
+                .WithMany(c => c.Replies)
+                .HasForeignKey(c => c.ParentCommentId)
+                .OnDelete(DeleteBehavior.SetNull);
+
             // Restricciones
             modelBuilder.Entity<Post>()
                 .HasIndex(p => p.Slug)

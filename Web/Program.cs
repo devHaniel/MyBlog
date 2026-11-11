@@ -6,6 +6,7 @@ using Domain.Models;
 using Infrastructure.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Web.Models;
 using Web.Services;
 using Web.Data;
 
@@ -17,6 +18,8 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 builder.Services.Configure<EmailOptions>(builder.Configuration.GetSection("Email"));
+builder.Services.Configure<SiteContentOptions>(builder.Configuration.GetSection("SiteContent"));
+builder.Services.Configure<SiteLegalOptions>(builder.Configuration.GetSection("SiteLegal"));
 builder.Services.AddScoped<IEmailSender, SmtpEmailSender>();
 builder.Services.AddAutoMapper(
     _ => { },

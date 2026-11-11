@@ -1,0 +1,111 @@
+@using Microsoft.Extensions.Options
+@using Web.Models
+@inject IOptions<SiteLegalOptions> LegalOptionsAccessor
+@{
+    ViewData["Title"] = "Aviso legal";
+    var legal = LegalOptionsAccessor.Value;
+    var hasPrivacyEmail = legal.PrivacyEmail.Contains('@') &&
+        !legal.PrivacyEmail.StartsWith("PENDIENTE", StringComparison.OrdinalIgnoreCase);
+}
+
+<article class="legal-page">
+    <header class="legal-page__header">
+        <p class="legal-page__eyebrow">Información legal</p>
+        <h1>Aviso legal</h1>
+        <p class="legal-page__updated">Última actualización: @legal.LastUpdated</p>
+    </header>
+
+    <div class="legal-page__notice" role="note">
+        <strong>Borrador pendiente de completar y revisión legal.</strong>
+        Los datos con la etiqueta “PENDIENTE” son necesarios para identificar correctamente al
+        titular. Este documento no sustituye asesoría jurídica para Honduras.
+    </div>
+
+    <div class="legal-page__body">
+        <h2>1. Titular del sitio</h2>
+        <ul>
+            <li><strong>Titular o responsable:</strong> @legal.ResponsibleName</li>
+            <li><strong>Domicilio:</strong> @legal.BusinessAddress, @legal.Jurisdiction</li>
+            <li>
+                <strong>Correo de contacto:</strong>
+                @if (hasPrivacyEmail)
+                {
+                    <a href="mailto:@legal.PrivacyEmail">@legal.PrivacyEmail</a>
+                }
+                else
+                {
+                    @legal.PrivacyEmail
+                }
+            </li>
+            <li><strong>Dominio:</strong> @legal.Domain</li>
+        </ul>
+
+        <h2>2. Objeto del sitio</h2>
+        <p>
+            Este sitio publica artículos y recursos sobre programación y permite crear cuentas,
+            publicar comentarios y administrar contenido según el rol asignado a cada cuenta.
+        </p>
+
+        <h2>3. Condiciones de uso</h2>
+        <p>
+            Utiliza el sitio de forma lícita y no intentes acceder sin autorización a cuentas,
+            datos, servicios o funciones administrativas. Al crear una cuenta, proporciona
+            información correcta y protege tus credenciales. El registro público crea cuentas de
+            visitante; los permisos de administración no se solicitan desde ese formulario.
+        </p>
+        <p>
+            Los comentarios pueden someterse a moderación. El responsable puede ocultar o retirar
+            contenido que incumpla la ley o las reglas de uso, respetando los procedimientos
+            aplicables.
+        </p>
+
+        <h2>4. Propiedad intelectual</h2>
+        <p>
+            Salvo que se indique lo contrario, los textos, diseño y materiales propios del sitio
+            pertenecen a su titular o se utilizan con autorización. No reutilices materiales
+            protegidos de terceros sin contar con los permisos o licencias correspondientes. Las
+            marcas y enlaces externos pertenecen a sus respectivos titulares.
+        </p>
+
+        <h2>5. Enlaces y disponibilidad</h2>
+        <p>
+            El sitio puede enlazar a servicios de terceros. El titular no controla sus contenidos,
+            disponibilidad ni políticas. Se procura mantener el servicio disponible y seguro, pero
+            pueden producirse interrupciones por mantenimiento, fallas técnicas o causas ajenas al
+            titular.
+        </p>
+
+        <h2>6. Responsabilidad</h2>
+        <p>
+            Los artículos se ofrecen con fines informativos y educativos; verifica los ejemplos
+            antes de utilizarlos en sistemas reales. Esta cláusula no limita responsabilidades que
+            no puedan excluirse conforme a la ley aplicable ni sustituye los derechos de las
+            personas usuarias.
+        </p>
+
+        <h2>7. Privacidad y cookies</h2>
+        <p>
+            El tratamiento de datos personales y el uso de cookies se describen en la
+            <a asp-controller="Home" asp-action="Privacy">Política de privacidad</a> y la
+            <a asp-controller="Home" asp-action="Cookies">Política de cookies</a>.
+        </p>
+
+        <h2>8. Legislación y contacto</h2>
+        <p>
+            La jurisdicción indicada para este sitio es @legal.Jurisdiction. La legislación
+            aplicable, autoridades competentes y mecanismos de reclamación deben ser confirmados
+            por el titular con asesoría legal local antes de publicar.
+        </p>
+        <p>
+            Para consultas sobre el sitio:
+            @if (hasPrivacyEmail)
+            {
+                <a href="mailto:@legal.PrivacyEmail">@legal.PrivacyEmail</a>
+            }
+            else
+            {
+                @legal.PrivacyEmail
+            }.
+        </p>
+    </div>
+</article>

@@ -44,6 +44,19 @@ public class CommentService : ICommentService
             throw new ArgumentException("Post not found.", nameof(dto));
         }
 
+        if (dto.ParentCommentId is int parentCommentId)
+        {
+            var parentComment = await _dbContext.Comments
+                .AsNoTracking()
+                .SingleOrDefaultAsync(comment => comment.Id == parentCommentId);
+            if (parentComment is null || parentComment.PostId != dto.PostId)
+            {
+                throw new ArgumentException(
+                    "Parent comment must belong to the same post.",
+                    nameof(dto));
+            }
+        }
+
         var comment = _mapper.Map<Comment>(dto);
         comment.CreatedAt = DateTime.UtcNow;
 

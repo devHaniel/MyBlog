@@ -7,4 +7,5 @@ public record CommentDto(
     bool IsApproved,
     int PostId,
     string AuthorId,
-    string AuthorName);
+    string AuthorName,
+    int? ParentCommentId = null);
